@@ -3,12 +3,19 @@ import axios from 'axios'
 import Header from './components/Header'
 import CartModal from './components/CartModal'
 import Toast from './components/Toast'
+import Auth from './components/Auth'
+import HomeBanner from './components/HomeBanner'
+import About from './components/About'
+import Footer from './components/Footer'
+import Handbook from './components/Handbook'
+import { Routes, Route } from 'react-router-dom'
 
 function App() {
   const [pets, setPets] = useState([])
   const [category, setCategory] = useState('Tất cả')
   const [searchTerm, setSearchTerm] = useState('')
   const [loading, setLoading] = useState(true)
+  const [showAuth, setShowAuth] = useState(false)
 
   // Giỏ hàng State
   const [cart, setCart] = useState([])
@@ -88,30 +95,54 @@ function App() {
   const cartItemCount = cart.reduce((total, item) => total + item.quantity, 0);
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20 font-sans text-gray-800">
+    <div id="home" className="min-h-screen bg-[#f9f9f9] font-sans text-gray-800 flex flex-col">
       <Header 
         searchTerm={searchTerm} 
         setSearchTerm={setSearchTerm} 
         cartCount={cartItemCount}
         onCartClick={() => setIsCartOpen(true)}
+        onLoginClick={() => setShowAuth(true)}
       />
 
-      {/* Bộ lọc danh mục */}
-      <div className="flex flex-wrap gap-3 justify-center my-8 px-4">
-        {['Tất cả', 'Chó cảnh', 'Mèo cảnh', 'Chim cảnh'].map(cat => (
-          <button
-            key={cat}
-            onClick={() => setCategory(cat)}
-            className={`px-6 py-2.5 rounded-full border-2 transition-all shadow-sm font-semibold whitespace-nowrap ${
-              category === cat
-                ? 'bg-orange-500 text-white border-orange-500 shadow-orange-500/30'
-                : 'bg-white text-orange-600 border-orange-200 hover:border-orange-500 hover:bg-orange-50'
-            }`}
+      <div className="flex-1 flex flex-col">
+       <Routes>
+         <Route path="/cam-nang/:loai" element={<Handbook />} />
+         <Route path="/" element={
+          showAuth ? (
+            <div className="container mx-auto px-4 py-8 max-w-2xl">
+          <button 
+            onClick={() => setShowAuth(false)}
+            className="mb-4 text-orange-600 hover:text-orange-800 font-semibold flex items-center gap-1 transition-colors"
           >
-            {cat}
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Quay lại
           </button>
-        ))}
-      </div>
+          <Auth onAuthSuccess={() => setShowAuth(false)} />
+        </div>
+      ) : (
+        <>
+          {/* Hiển thị Banner ở trang chủ (chỉ ẩn khi vào form Auth) */}
+          <HomeBanner />
+
+          {/* Bộ lọc danh mục */}
+          <div id="shop" className="flex flex-wrap gap-3 justify-center mb-8 mt-8 px-4 scroll-mt-24">
+            {['Tất cả', 'Chó cảnh', 'Mèo cảnh', 'Chim cảnh', 'Thú nhỏ', 'Bò sát', 'Chuồng & Phụ kiện'].map(cat => (
+              <button
+                key={cat}
+                onClick={() => setCategory(cat)}
+                className={`px-6 py-2.5 rounded-full border-2 transition-all shadow-sm font-semibold whitespace-nowrap ${
+                  category === cat
+                    ? 'bg-orange-500 text-white border-orange-500 shadow-orange-500/30'
+                    : 'bg-white text-orange-600 border-orange-200 hover:border-orange-500 hover:bg-orange-50'
+                }`}
+              >
+                {cat === 'Chuồng & Phụ kiện' && <span className="mr-1">🎁</span>}
+                {cat}
+              </button>
+            ))}
+          </div>
 
       <main className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center mb-8 border-b border-gray-200 pb-4">
@@ -147,7 +178,9 @@ function App() {
             {filteredPets.map(pet => (
               <div 
                 key={pet.pet_id} 
-                className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 cursor-pointer group flex flex-col h-full"
+                className={`bg-white rounded-2xl shadow-sm border overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 cursor-pointer group flex flex-col h-full ${
+                  pet.category_name === 'Chuồng & Phụ kiện' ? 'border-blue-200 hover:border-blue-400' : 'border-gray-100 hover:border-orange-200'
+                }`}
                 onClick={() => setSelectedPet(pet)}
               >
                 <div className="relative aspect-[4/3] overflow-hidden bg-gray-100">
@@ -156,7 +189,10 @@ function App() {
                     alt={pet.title} 
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
                   />
-                  <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm text-gray-800 text-xs font-bold px-3 py-1.5 rounded-full shadow-sm">
+                  <div className={`absolute top-3 left-3 bg-white/90 backdrop-blur-sm text-xs font-bold px-3 py-1.5 rounded-full shadow-sm ${
+                    pet.category_name === 'Chuồng & Phụ kiện' ? 'text-blue-600 border border-blue-100' : 'text-gray-800'
+                  }`}>
+                    {pet.category_name === 'Chuồng & Phụ kiện' && <span className="mr-1">🏷️</span>}
                     {pet.category_name}
                   </div>
                 </div>
@@ -190,6 +226,12 @@ function App() {
           </div>
         )}
       </main>
+      <About />
+      <Footer />
+      </>
+      )
+      } />
+      </Routes>
 
       {/* Cart Drawer */}
       <CartModal 
@@ -277,6 +319,7 @@ function App() {
 
       {/* Toast */}
       <Toast message={toast.message} show={toast.show} onClose={() => setToast({ show: false, message: '' })} />
+      </div>
     </div>
   )
 }
